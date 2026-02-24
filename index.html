@@ -5,13 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>뚱땅하면 변환 끝</title>
 
-<!-- 폰트 -->
 <style>
 @font-face {
   font-family: 'HakgyoBookmark';
-  src: url('Hakgyoansim_ChaekgalpiR.ttf') format('truetype');
+  src: url('fonts/HakgyoansimChaekgalpiR.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.main-title {
+  font-family: 'HakgyoBookmark', sans-serif;
+  font-weight: normal;
 }
 </style>
+
+</head>
+
+<body>
+
+<h1 class="main-title">뚱땅하면 변환 끝</h1>
+
+</body>
+</html>
 
 <!-- Tesseract -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
