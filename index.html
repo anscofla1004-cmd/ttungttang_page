@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐣 땅변환기🐥</title>
+    <title>🐣 뚱땅변환기🐥</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -213,10 +213,6 @@
         function download(type) {
             const blob = type === 'txt' ? new Blob([resultArea.value], {type:"text/plain;charset=utf-8"}) : new Blob(['\ufeff'+resultArea.value], {type:'application/msword'});
             saveAs(blob, `뚱땅변환_${currentFileName || '결과'}.${type}`);
-        }
-    </script>
-</body>
-</html>
         }
     </script>
 </body>
