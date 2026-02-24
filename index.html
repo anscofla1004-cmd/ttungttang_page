@@ -38,7 +38,7 @@ body {
                'Noto Color Emoji',
                sans-serif;
   font-size: 3rem;
-  color: #F4B400;          /* 병아리 노랑 */
+  color: linear-gradient(90deg,#FF7EB3,#7AFCFF);
   text-align: center;      /* 가운데 정렬 */
   margin-bottom: 5px;
 }
@@ -82,7 +82,7 @@ button {
   border: none;
   border-radius: 30px;
   cursor: pointer;
-  background: #F4B400;
+  background: #5B8DEF;
   color: white;
   font-weight: 500;
   transition: 0.2s;
@@ -103,7 +103,7 @@ button:hover {
 .progress {
   height: 100%;
   width: 0%;
-  background: #F4B400;
+  background: #5B8DEF;
   transition: width 0.2s;
 }
 
@@ -229,14 +229,28 @@ function downloadTXT(){
 }
 
 function downloadDOCX(){
-  const doc=new docx.Document({
-    sections:[{children:[new docx.Paragraph(outputText.value)]}]
+  const { Document, Packer, Paragraph } = docx;
+
+  const doc = new Document({
+    sections: [
+      {
+        children: [
+          new Paragraph({
+            text: outputText.value
+          })
+        ]
+      }
+    ]
   });
-  docx.Packer.toBlob(doc).then(blob=>{
-    const link=document.createElement("a");
-    link.href=URL.createObjectURL(blob);
-    link.download="뚱땅쓰_ocr.docx";
+
+  Packer.toBlob(doc).then(blob => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "뚱땅쓰_ocr.docx";
     link.click();
+  }).catch(err => {
+    console.error("DOCX 생성 오류:", err);
+    alert("워드 파일 생성 중 오류가 발생했어요!");
   });
 }
 </script>
