@@ -23,13 +23,13 @@
     <h1>🐣뚱땅하면 변환 끗🐥</h1>
     <div class="container">
         <div class="drop-zone" onclick="document.getElementById('file-input').click()">
-            <p>📄 파일을 뚱땅! 던져주세요 (API 설정 필요없음!)</p>
+            <p>📄 이미지/PDF 파일을 업로드해 주새요! </p>
             <input type="file" id="file-input" hidden accept="image/*, application/pdf">
         </div>
-        <div id="status" style="margin-top:10px; color:#666; text-align:center;">준비 완료!</div>
+        <div id="status" style="margin-top:10px; color:#666; text-align:center;">변환 가보자고🔥</div>
         <textarea id="result"></textarea>
         <div class="btn-group">
-            <button class="btn-fix" onclick="smartFix()">🪄 띄어쓰기 마법 교정</button>
+            <button class="btn-fix" onclick="smartFix()">🪄 띄어쓰기 교정</button>
             <button onclick="download()">💾 파일로 저장</button>
         </div>
     </div>
