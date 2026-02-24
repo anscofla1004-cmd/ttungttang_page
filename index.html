@@ -5,14 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🐣뚱땅하면 변환 끝🐥</title>
 
-<!-- 학교안심 책갈피 폰트 -->
 <style>
 @font-face {
-  font-family: 'HakgyoBookmark',
-               'Apple Color Emoji',
-               'Segoe UI Emoji',
-               'Noto Color Emoji',
-               sans-serif;
+  font-family: 'HakgyoBookmark';
   src: url('/ttungttang_page/fonts/HakgyoansimChaekgalpiR.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
@@ -35,28 +30,26 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
+/* ✅ 제목 */
 .main-title {
   font-family: 'HakgyoBookmark',
                'Apple Color Emoji',
                'Segoe UI Emoji',
                'Noto Color Emoji',
                sans-serif;
-};
   font-size: 3rem;
-  text-align: center;
-  background: linear-gradient(90deg,#FF7EB3,#7AFCFF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #F4B400;          /* 병아리 노랑 */
+  text-align: center;      /* 가운데 정렬 */
   margin-bottom: 5px;
 }
 
+/* ✅ 부제목 */
 .subtitle {
   font-family: 'HakgyoBookmark',
                'Apple Color Emoji',
                'Segoe UI Emoji',
                'Noto Color Emoji',
                sans-serif;
-  };
   text-align: center;
   color: #666;
   margin-bottom: 25px;
@@ -89,7 +82,7 @@ button {
   border: none;
   border-radius: 30px;
   cursor: pointer;
-  background: #5B8DEF;
+  background: #F4B400;
   color: white;
   font-weight: 500;
   transition: 0.2s;
@@ -110,7 +103,7 @@ button:hover {
 .progress {
   height: 100%;
   width: 0%;
-  background: #5B8DEF;
+  background: #F4B400;
   transition: width 0.2s;
 }
 
@@ -119,23 +112,9 @@ button:hover {
   font-size: 14px;
   color: #555;
 }
-
-.file-list {
-  margin-top: 30px;
-  border-top: 1px solid #eee;
-  padding-top: 15px;
-}
-.file-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  background: #F1F5F9;
-  padding: 10px;
-  border-radius: 12px;
-}
 </style>
 
-<!-- OCR & 라이브러리 -->
+<!-- OCR 라이브러리 -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
