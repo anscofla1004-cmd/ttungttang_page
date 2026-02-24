@@ -75,7 +75,7 @@
         // [핵심] 속도를 위해 워커를 한 번만 생성해서 계속 재사용합니다.
         async function getWorker() {
             if (!tesseractWorker) {
-                statusText.innerText = "초기 로딩 중... (처음 한 번만 실행됩니다)";
+                statusText.innerText = "업로드 중... ";
                 tesseractWorker = await Tesseract.createWorker('kor+eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
