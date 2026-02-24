@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐣뚱땅변환기🐥</title>
+    <title>🐣 땅변환기🐥</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -12,7 +12,6 @@
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .container { width: 100%; max-width: 850px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
         
-        /* 제목 색상 진한 파랑으로 복구 */
         h1 { color: var(--dark-blue); margin: 10px 0; font-weight: 800; text-align: center; }
         .subtitle { text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 25px; }
 
@@ -23,18 +22,21 @@
         .bar-bg { width: 100%; height: 14px; background: #eee; border-radius: 7px; overflow: hidden; }
         .bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--dark-blue) 0%, var(--main) 100%); transition: 0.3s ease; }
         
-        textarea { width: 100%; height: 380px; margin-top: 20px; padding: 20px; border-radius: 15px; border: 1px solid #e0e0e0; font-size: 16px; line-height: 1.8; box-sizing: border-box; resize: none; background: #fdfdfd; }
+        textarea { width: 100%; height: 380px; margin-top: 20px; padding: 20px; border-radius: 15px; border: 1px solid #e0e0e0; font-size: 16px; line-height: 1.8; box-sizing: border-box; resize: none; background: #fdfdfd; outline: none; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn-fix { background: var(--green); grid-column: span 2; font-size: 18px; padding: 18px; box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3); }
+        .btn-fix { background: var(--green); grid-column: span 2; font-size: 18px; padding: 18px; }
         button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--main); transition: 0.2s; }
         button:hover { transform: translateY(-2px); opacity: 0.9; }
         
+        /* 히스토리 섹션 개선 */
         .history-section { width: 100%; max-width: 850px; margin-top: 40px; }
-        .history-list { display: flex; flex-direction: column; gap: 10px; }
-        .history-item { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .history-info { cursor: pointer; flex: 1; overflow: hidden; }
-        .history-preview { font-size: 14px; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-list { display: flex; flex-direction: column; gap: 8px; }
+        .history-item { background: white; padding: 15px 20px; border-radius: 15px; border: 1px solid #eef0f2; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+        .history-name { font-weight: 600; color: var(--dark-blue); cursor: pointer; flex: 1; }
+        .history-name:hover { text-decoration: underline; }
+        .history-date { font-size: 12px; color: #999; margin-right: 15px; }
+        .btn-del { background: #ff4d4d; width: auto; padding: 6px 12px; font-size: 12px; }
         
         canvas { display: none; }
     </style>
@@ -46,16 +48,16 @@
 
     <div class="container">
         <div class="drop-zone" onclick="document.getElementById('file-input').click()">
-            <p>📄 스캔본 이미지나 PDF를 업로드해 주세요!</p>
+            <p id="label">📄 이미지/PDF를 업로드해 주세요!</p>
             <input type="file" id="file-input" hidden accept="image/*, application/pdf">
         </div>
 
         <div class="progress-box" id="progress-box">
             <div class="bar-bg"><div class="bar-fill" id="bar-fill"></div></div>
-            <p id="status" style="text-align:center; margin-top:10px; font-weight:bold; color: var(--dark-blue);">인식 중...</p>
+            <p id="status" style="text-align:center; margin-top:10px; font-weight:bold; color: var(--dark-blue);">AI 모델 로드 중...</p>
         </div>
 
-        <textarea id="result" placeholder="인식된 결과가 여기에 나옵니다."></textarea>
+        <textarea id="result" placeholder="변환 결과가 여기에 표시됩니다."></textarea>
 
         <div class="btn-group">
             <button class="btn-fix" onclick="superFix()">🪄 띄어쓰기 교정</button>
@@ -65,7 +67,7 @@
     </div>
 
     <div class="history-section">
-        <h3>📜 최근 변환 기록</h3>
+        <h3>📜 최근 작업 파일 (기록)</h3>
         <div id="history-list" class="history-list"></div>
     </div>
 
@@ -79,18 +81,19 @@
         const historyList = document.getElementById('history-list');
         
         let worker = null;
+        let currentFileName = "";
 
         window.onload = updateHistoryUI;
 
         async function initWorker() {
             if (!worker) {
-                statusText.innerText = "AI 모델 로드 중...";
+                statusText.innerText = "초정밀 AI 모델 로드 중...";
                 worker = await Tesseract.createWorker('kor+eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             const p = Math.round(m.progress * 100);
                             barFill.style.width = p + '%';
-                            statusText.innerText = `변환 중... ${p}%`;
+                            statusText.innerText = `고정밀 분석 중... ${p}%`;
                         }
                     }
                 });
@@ -102,30 +105,29 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            currentFileName = file.name; // 파일명 저장
             progressBox.style.display = 'block';
             resultArea.value = '';
             
             if (file.type === "application/pdf") {
                 await processPDF(file);
             } else {
-                // 이미지 인식률 향상을 위해 캔버스 전처리 후 전달
                 const imgUrl = URL.createObjectURL(file);
                 const processedImg = await preprocessImage(imgUrl);
                 await doOCR(processedImg);
             }
-            statusText.innerText = "변환이 끝났습니다! 교정 버튼을 눌러주세요✨";
+            statusText.innerText = "분석 완료! 교정 버튼을 눌러 완성도를 높이세요.";
         };
 
-        // 인식률 향상을 위한 이미지 전처리 (대비 강화)
+        // 이미지 전처리 (대비 강화 + 이진화 필터)
         function preprocessImage(src) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.filter = 'contrast(1.2) brightness(1.1) grayscale(1)'; // 대비와 밝기 최적화
+                    canvas.width = img.width; canvas.height = img.height;
+                    ctx.filter = 'contrast(160%) brightness(100%) grayscale(100%)';
                     ctx.drawImage(img, 0, 0);
                     resolve(canvas.toDataURL('image/png'));
                 };
@@ -145,81 +147,76 @@
             const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 3.0 }); // PDF 렌더링 스케일 업 (인식률 핵심)
+                // 성능 최대치를 위해 Scale 4.0 적용
+                const viewport = page.getViewport({ scale: 4.0 }); 
                 const canvas = document.getElementById('pdf-canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.height = viewport.height; canvas.width = viewport.width;
-                ctx.filter = 'contrast(1.1) grayscale(1)'; 
+                ctx.filter = 'contrast(140%) grayscale(100%)';
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
                 await doOCR(canvas.toDataURL('image/png'));
             }
         }
 
-        // ⭐ 초정밀 띄어쓰기 엔진 (v3.0)
         function superFix() {
             let text = resultArea.value;
             if(!text) return;
-
             const improved = text
-              // 1. OCR 특유의 한 글자씩 쪼개진 글자 강제 결합 (가 나 다 -> 가나다)
-        .replace(/([가-힣])\s(?=[가-힣]\s)/g, '$1')
-        
-        // 2. 단어 중간에 어설프게 들어간 줄바꿈 제거 (문맥 연결)
-        .replace(/([가-힣])\n(?=[가-힣])/g, '$1')
-        
-        // 3. 조사 및 복합 어미 결합 (가장 긴 목록으로 통합)
-        .replace(/([가-힣])\s+(은|는|이|가|을|를|의|에|로|으로|와|과|도|만|나|이나|서|에서|에게|께|까지|부터|조차|마저|커녕|마다|든지|라도|야말로)/g, '$1$2')
-        
-        // 4. 어미 및 연결형 결합 (가장 긴 목록으로 통합)
-        .replace(/([가-힣])\s+(다|고|어|아|게|지|니|냐|며|면|자|구나|군요|네요|어야|아야|여야|므로|니까|어서|아서|느라|려고|고자|도록|어라|아라)/g, '$1$2')
-        
-        // 5. 의존 명사 및 접사 결합
-        .replace(/([가-힣])\s+(들|씨|님|분|쪽|쯤|꼴|층|번)/g, '$1$2')
-        
-        // 6. 숫자와 단위 결합 (단위 목록 통합)
-        .replace(/(\d+)\s+(개|명|번|세|살|원|층|시|분|초|월|일|년|배|퍼센트|%|kg|g|m|cm|km)/g, '$1$2')
-        
-        // 7. 문장 부호 앞 공백 제거
-        .replace(/\s+([.,!?])/g, '$1')
-        
-        // 8. 마침표 뒤 줄바꿈 및 중복 공백/줄바꿈 최종 정리
-        .replace(/\n+/g, '\n')
-        .replace(/[ ]+/g, ' ').trim();
+                .replace(/([가-힣])\s(?=[가-힣]\s)/g, '$1')
+                .replace(/([가-힣])\n(?=[가-힣])/g, '$1')
+                .replace(/([가-힣])\s+(은|는|이|가|을|를|의|에|로|으로|와|과|도|만|나|서|에서|에게|께|까지|부터|조차|마저|커녕|마다|든지|라도|야말로)/g, '$1$2')
+                .replace(/([가-힣])\s+(다|고|어|아|게|지|니|며|면|자|구나|군요|네요|어야|아야|여야|므로|니까|어서|아서|느라|려고|고자|도록)/g, '$1$2')
+                .replace(/(\d+)\s+(개|명|번|세|살|원|층|시|분|초|월|일|년|배|%|kg|g|m|cm|km)/g, '$1$2')
+                .replace(/\s+([.,!?])/g, '$1')
+                .replace(/\n+/g, '\n').replace(/[ ]+/g, ' ').trim();
 
             resultArea.value = improved;
-            statusText.innerText = "교정 완료🐥";
-            saveHistory(improved);
+            statusText.innerText = "교정 완료 ✨";
+            saveHistory(currentFileName || "이름없는 작업", improved);
         }
 
-        function saveHistory(content) {
-            let h = JSON.parse(localStorage.getItem('tt_history') || '[]');
-            h.unshift({ id: Date.now(), date: new Date().toLocaleString(), text: content });
-            localStorage.setItem('tt_history', JSON.stringify(h.slice(0, 5)));
+        function saveHistory(name, content) {
+            let h = JSON.parse(localStorage.getItem('tt_history_final') || '[]');
+            h.unshift({ id: Date.now(), name: name, date: new Date().toLocaleString(), text: content });
+            localStorage.setItem('tt_history_final', JSON.stringify(h.slice(0, 10)));
             updateHistoryUI();
         }
 
         function updateHistoryUI() {
-            const h = JSON.parse(localStorage.getItem('tt_history') || '[]');
+            const h = JSON.parse(localStorage.getItem('tt_history_final') || '[]');
             historyList.innerHTML = h.map(i => `
                 <div class="history-item">
-                    <div class="history-info" onclick="document.getElementById('result').value = \`${i.text.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\` ">
-                        <div style="font-size:11px; color:#aaa; margin-bottom:4px;">${i.date}</div>
-                        <div class="history-preview">${i.text}</div>
+                    <div class="history-name" onclick="loadHistory('${i.id}')" title="클릭하면 내용을 불러옵니다.">
+                        📄 ${i.name}
                     </div>
-                    <button style="background:#ff4d4d; width:auto; padding:5px 10px; font-size:12px; margin-left:10px;" onclick="deleteHistory(${i.id})">삭제</button>
+                    <span class="history-date">${i.date}</span>
+                    <button class="btn-del" onclick="deleteHistory(${i.id})">삭제</button>
                 </div>
             `).join('');
         }
 
+        function loadHistory(id) {
+            const h = JSON.parse(localStorage.getItem('tt_history_final') || '[]');
+            const item = h.find(i => i.id == id);
+            if(item) {
+                resultArea.value = item.text;
+                alert(`'${item.name}' 기록을 불러왔습니다!`);
+            }
+        }
+
         function deleteHistory(id) {
-            let h = JSON.parse(localStorage.getItem('tt_history') || '[]');
-            localStorage.setItem('tt_history', JSON.stringify(h.filter(i => i.id !== id)));
+            let h = JSON.parse(localStorage.getItem('tt_history_final') || '[]');
+            localStorage.setItem('tt_history_final', JSON.stringify(h.filter(i => i.id !== id)));
             updateHistoryUI();
         }
 
         function download(type) {
             const blob = type === 'txt' ? new Blob([resultArea.value], {type:"text/plain;charset=utf-8"}) : new Blob(['\ufeff'+resultArea.value], {type:'application/msword'});
-            saveAs(blob, `뚱땅결과_${Date.now()}.${type}`);
+            saveAs(blob, `뚱땅변환_${currentFileName || '결과'}.${type}`);
+        }
+    </script>
+</body>
+</html>
         }
     </script>
 </body>
