@@ -3,46 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>뚱땅하면 변환 끝</title>
+<title>🐣뚱땅하면 변환 끝🐥</title>
 
-<!-- 폰트 -->
+<!-- 학교안심 책갈피 폰트 -->
 <style>
 @font-face {
   font-family: 'HakgyoBookmark';
   src: url('/ttungttang_page/fonts/HakgyoansimChaekgalpiR.woff2') format('woff2');
-}
   font-weight: normal;
+  font-style: normal;
   font-display: swap;
 }
-</style>
 
-<!-- Tesseract -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-
-<!-- PDF.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
-<!-- DOCX -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
-
-<style>
 body {
-  font-family: Arial, sans-serif;
-  background: #F8FAFC;
   margin: 0;
   padding: 20px;
+  background: #F8FAFC;
+  font-family: Arial, sans-serif;
 }
 
 .container {
   max-width: 1000px;
   margin: auto;
-  background: white;
+  background: #ffffff;
   padding: 30px;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-/* 브랜드 타이틀 */
 .main-title {
   font-family: 'HakgyoBookmark', sans-serif;
   font-size: 3rem;
@@ -60,7 +48,6 @@ body {
   margin-bottom: 25px;
 }
 
-/* 업로드 영역 */
 .drop-zone {
   border: 2px dashed #ccc;
   padding: 40px;
@@ -69,12 +56,8 @@ body {
   cursor: pointer;
   transition: 0.2s;
 }
-.drop-zone:hover {
-  background: #F1F5F9;
-}
-.drop-zone.dragover {
-  background: #E0F2FE;
-}
+.drop-zone:hover { background: #F1F5F9; }
+.drop-zone.dragover { background: #E0F2FE; }
 
 textarea {
   width: 100%;
@@ -86,7 +69,6 @@ textarea {
   border: 1px solid #ddd;
 }
 
-/* 버튼 */
 button {
   margin: 12px 8px 0 0;
   padding: 10px 16px;
@@ -103,7 +85,6 @@ button:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* 진행률 */
 .progress-bar {
   width: 100%;
   height: 8px;
@@ -139,6 +120,12 @@ button:hover {
   border-radius: 12px;
 }
 </style>
+
+<!-- OCR & 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
+
 </head>
 <body>
 
@@ -151,18 +138,15 @@ button:hover {
   </div>
   <input type="file" id="fileInput" accept="image/*,.pdf" hidden>
 
-  <div class="progress-bar"><div class="progress" id="progressBar"></div></div>
+  <div class="progress-bar">
+    <div class="progress" id="progressBar"></div>
+  </div>
   <div class="status" id="status"></div>
 
   <textarea id="outputText" placeholder="여기에 변환된 텍스트가 나타나요 ✨"></textarea>
 
   <button onclick="downloadTXT()">TXT 다운로드</button>
   <button onclick="downloadDOCX()">Word 다운로드</button>
-  <button onclick="saveCurrent()">결과 저장</button>
-
-  <div class="file-list" id="fileList">
-    <h3>📂 저장된 문서</h3>
-  </div>
 </div>
 
 <script>
@@ -174,30 +158,14 @@ const fileInput = document.getElementById('fileInput');
 const outputText = document.getElementById('outputText');
 const progressBar = document.getElementById('progressBar');
 const statusText = document.getElementById('status');
-const fileList = document.getElementById('fileList');
 
 let worker;
-let db;
 
-/* IndexedDB */
-const request = indexedDB.open("OCR_DB", 1);
-request.onupgradeneeded = e => {
-  db = e.target.result;
-  db.createObjectStore("documents", { keyPath:"id", autoIncrement:true });
-};
-request.onsuccess = e => {
-  db = e.target.result;
-  loadSaved();
-};
-
-/* Worker 초기화 */
 async function initWorker(){
   worker = await Tesseract.createWorker({
     logger: m => {
-      if(m.progress){
-        progressBar.style.width = (m.progress*100)+"%";
-      }
-      statusText.innerText = m.status;
+      if(m.progress) progressBar.style.width = (m.progress*100)+"%";
+      statusText.innerText = m.status || "";
     }
   });
   await worker.loadLanguage('kor+eng');
@@ -205,10 +173,13 @@ async function initWorker(){
 }
 initWorker();
 
-/* Drag & Drop */
 dropZone.onclick = ()=> fileInput.click();
 fileInput.onchange = ()=> handleFile(fileInput.files[0]);
-dropZone.ondragover = e=>{ e.preventDefault(); dropZone.classList.add("dragover"); };
+
+dropZone.ondragover = e=>{
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+};
 dropZone.ondragleave = ()=> dropZone.classList.remove("dragover");
 dropZone.ondrop = e=>{
   e.preventDefault();
@@ -254,48 +225,6 @@ async function processPDF(file){
     const {data} = await worker.recognize(canvas);
     outputText.value += "\n\n"+data.text;
   }
-}
-
-/* 저장 */
-function saveCurrent(){
-  const tx = db.transaction("documents","readwrite");
-  tx.objectStore("documents").add({
-    text: outputText.value,
-    date: new Date().toLocaleString()
-  });
-  tx.oncomplete = loadSaved;
-}
-
-function loadSaved(){
-  fileList.innerHTML="<h3>📂 저장된 문서</h3>";
-  const tx = db.transaction("documents","readonly");
-  tx.objectStore("documents").openCursor().onsuccess = e=>{
-    const cursor = e.target.result;
-    if(cursor){
-      const div=document.createElement("div");
-      div.className="file-item";
-      div.innerHTML=`
-        <span>${cursor.value.date}</span>
-        <div>
-          <button onclick="openDoc(${cursor.key})">열기</button>
-          <button onclick="deleteDoc(${cursor.key})">삭제</button>
-        </div>`;
-      fileList.appendChild(div);
-      cursor.continue();
-    }
-  };
-}
-
-function openDoc(id){
-  const tx=db.transaction("documents","readonly");
-  const req=tx.objectStore("documents").get(id);
-  req.onsuccess=()=> outputText.value=req.result.text;
-}
-
-function deleteDoc(id){
-  const tx=db.transaction("documents","readwrite");
-  tx.objectStore("documents").delete(id);
-  tx.oncomplete=loadSaved;
 }
 
 function downloadTXT(){
