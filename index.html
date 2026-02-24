@@ -3,62 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐣뚱땅하면 변환 끗🐥</title>
+    <title>🐣뚱땅변환기🐥</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
-        :root { --main: #007bff; --dark: #003366; --green: #28a745; }
-        body { font-family: 'Pretendard', sans-serif; background: #f4f7f9; display: flex; flex-direction: column; align-items: center; padding: 30px 15px; margin: 0; }
-        .container { width: 100%; max-width: 800px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        h1 { color: var(--dark); text-align: center; font-size: 2rem; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #777; font-size: 0.9rem; margin-bottom: 25px; }
+        :root { --main: #007bff; --dark: #1a1a1a; --green: #2ecc71; }
+        body { font-family: 'Pretendard', sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 850px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        h1 { color: var(--dark); margin: 10px 0; font-weight: 800; }
+        .drop-zone { border: 3px dashed #d1d9e6; background: #f8fbff; padding: 50px; border-radius: 20px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .drop-zone:hover { border-color: var(--main); background: #f0f7ff; }
         
-        /* 업로드 영역 */
-        .drop-zone { border: 2px dashed var(--main); background: #f0f7ff; padding: 40px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .drop-zone:hover { background: #e5f1ff; border-style: solid; }
-
-        /* 진행률 바 */
-        .progress-box { display: none; margin: 20px 0; }
-        .bar-bg { width: 100%; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; position: relative; }
-        .bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #007bff, #00c6ff); transition: width 0.2s ease; }
-        .status-text { text-align: center; font-size: 14px; color: #555; margin-top: 8px; font-weight: 500; }
-
-        /* 결과창 */
-        textarea { width: 100%; height: 350px; margin-top: 15px; padding: 18px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; line-height: 1.8; box-sizing: border-box; resize: none; outline: none; background: #fafafa; }
+        .progress-box { display: none; margin: 25px 0; }
+        .bar-bg { width: 100%; height: 14px; background: #eee; border-radius: 7px; overflow: hidden; }
+        .bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); transition: 0.3s ease; }
         
-        /* 버튼 */
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; background: var(--main); transition: 0.2s; font-size: 15px; }
-        .btn-fix { background: var(--green); grid-column: span 2; font-size: 16px; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:active { transform: translateY(0); }
-
+        textarea { width: 100%; height: 400px; margin-top: 20px; padding: 20px; border-radius: 15px; border: 1px solid #e0e0e0; font-size: 16px; line-height: 1.8; box-sizing: border-box; resize: none; outline: none; background: #fdfdfd; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .btn-fix { background: var(--green); grid-column: span 2; font-size: 18px; padding: 18px; box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3); }
+        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; background: var(--main); transition: 0.2s; }
+        button:hover { transform: translateY(-2px); opacity: 0.9; }
+        
         canvas { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>🐣뚱땅하면 변환 끗🐥</h1>
-    <p class="subtitle">변환 가보자고🔥</p>
-
+    <h1>🐣 뚱땅하면 변환 끗 🐥</h1>
     <div class="container">
         <div class="drop-zone" onclick="document.getElementById('file-input').click()">
-            <p id="label">📄 여기에 파일(이미지/PDF)을 업로드해 주세요</p>
+            <p style="font-size: 1.1rem; color: #555;">📄 여기에 이미지/PDF를 업로드해 주세요!</p>
             <input type="file" id="file-input" hidden accept="image/*, application/pdf">
         </div>
 
         <div class="progress-box" id="progress-box">
             <div class="bar-bg"><div class="bar-fill" id="bar-fill"></div></div>
-            <p class="status-text" id="status">변환 준비 완료</p>
+            <p id="status" style="text-align:center; margin-top:10px; font-weight:bold; color: var(--main);">변환 준비 중...</p>
         </div>
 
-        <textarea id="result" placeholder="변환된 결과가 여기에 표시됩니다."></textarea>
+        <textarea id="result" placeholder="인식된 텍스트가 여기에 나옵니다."></textarea>
 
         <div class="btn-group">
-            <button class="btn-fix" onclick="smartFix()">🪄 띄어쓰기 교정</button>
-            <button onclick="download('txt')">TXT 저장</button>
-            <button style="background:var(--dark)" onclick="download('doc')">Word 저장</button>
+            <button class="btn-fix" onclick="superFix()">🪄 띄어쓰기 교정</button>
+            <button onclick="download('txt')">메모장(.txt) 저장</button>
+            <button style="background:var(--dark)" onclick="download('doc')">워드(.doc) 저장</button>
         </div>
     </div>
 
@@ -70,23 +60,22 @@
         const barFill = document.getElementById('bar-fill');
         const progressBox = document.getElementById('progress-box');
         
-        let tesseractWorker = null;
+        let worker = null;
 
-        // [핵심] 속도를 위해 워커를 한 번만 생성해서 계속 재사용합니다.
-        async function getWorker() {
-            if (!tesseractWorker) {
-                statusText.innerText = "업로드 중... ";
-                tesseractWorker = await Tesseract.createWorker('kor+eng', 1, {
+        async function initWorker() {
+            if (!worker) {
+                statusText.innerText = "업로드 중...";
+                worker = await Tesseract.createWorker('kor+eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
-                            const progress = Math.round(m.progress * 100);
-                            barFill.style.width = progress + '%';
-                            statusText.innerText = `열심히 읽는 중... (${progress}%)`;
+                            const p = Math.round(m.progress * 100);
+                            barFill.style.width = p + '%';
+                            statusText.innerText = `AI 모델 로드 중... ${p}%`;
                         }
                     }
                 });
             }
-            return tesseractWorker;
+            return worker;
         }
 
         document.getElementById('file-input').onchange = async (e) => {
@@ -95,74 +84,73 @@
 
             progressBox.style.display = 'block';
             resultArea.value = '';
-            barFill.style.width = '0%';
             
             if (file.type === "application/pdf") {
-                await handlePDF(file);
+                await processPDF(file);
             } else {
-                await runOCR(file);
+                await doOCR(file);
             }
-            
-            statusText.innerText = "변환 완료!✨ 띄어쓰기 교정 버튼을 눌러 마무리하세요.";
+            statusText.innerText = "인식 완료! 이제 '띄어쓰기 교정' 버튼을 누르세요!";
         };
 
-        async function runOCR(source) {
-            const worker = await getWorker();
-            const { data: { text } } = await worker.recognize(source);
-            
-            // 실시간 결과 누적 및 줄바꿈 정리
-            const cleaned = text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-            resultArea.value += (resultArea.value ? '\n\n' : '') + cleaned;
+        async function doOCR(src) {
+            const w = await initWorker();
+            const { data: { text } } = await w.recognize(src);
+            resultArea.value += text;
         }
 
-        async function handlePDF(file) {
+        async function processPDF(file) {
             const pdfjsLib = window['pdfjs-dist/build/pdf'];
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-            
             const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-            const total = pdf.numPages;
-
-            for (let i = 1; i <= total; i++) {
-                statusText.innerText = `${i} / ${total} 페이지 준비 중...`;
+            for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 2.0 });
+                const viewport = page.getViewport({ scale: 2.5 });
                 const canvas = document.getElementById('pdf-canvas');
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                await page.render({ canvasContext: context, viewport: viewport }).promise;
-                await runOCR(canvas.toDataURL('image/png'));
+                const ctx = canvas.getContext('2d');
+                canvas.height = viewport.height; canvas.width = viewport.width;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                await doOCR(canvas.toDataURL('image/png'));
             }
         }
 
-        // [강화] 자체 띄어쓰기 교정 로직
-        function smartFix() {
+        // ⭐ 초강력 자체 교정 엔진 (v2.0)
+        function superFix() {
             let text = resultArea.value;
-            if(!text) return alert("교정할 내용이 없어요!");
+            if(!text) return;
 
             statusText.innerText = "띄어쓰기 교정 중...";
 
-            const fixed = text
-                // 1. "가 나 다 라" 처럼 한 글자씩 쪼개진 것들 붙이기
-                .replace(/([가-힣])\s+(?=[가-힣]\s)/g, '$1')
-                // 2. 주요 조사(은,는,이,가,을,를 등) 앞의 공백 제거
-                .replace(/([가-힣])\s+(은|는|이|가|을|를|과|와|의|로|으로|에|서|에서|만|도)/g, '$1$2')
-                // 3. 마침표 뒤 줄바꿈 및 중복 공백 정리
-                .replace(/([.!?])\s*/g, '$1\n')
-                .replace(/\n\s+/g, '\n')
+            const improved = text
+                // 1. 단어 사이가 한 글자씩 벌어진 경우 강제 결합 (가 나 다 -> 가나다)
+                .replace(/([가-힣])\s(?=[가-힣]\s)/g, '$1')
+                
+                // 2. 단어 중간에 어설프게 들어간 줄바꿈 제거 (문맥 연결)
+                .replace(/([가-힣])\n(?=[가-힣])/g, '$1')
+                
+                // 3. 조사 앞 공백 제거 (학교 에 -> 학교에)
+                .replace(/([가-힣])\s+(은|는|이|가|을|를|의|에|로|으로|와|과|도|만|나|이나|서|에서|에게|께)/g, '$1$2')
+                
+                // 4. 어미 결합 (먹 었다 -> 먹었다, 하 고 -> 하고)
+                .replace(/([가-힣])\s+(다|고|어|아|게|지|니|냐|며|면|자|구나|군요|네요|어라|아라|니까|어서|아서)/g, '$1$2')
+                
+                // 5. 숫자와 단위 붙이기 (10 개 -> 10개, 5 명 -> 5명)
+                .replace(/(\d+)\s+(개|명|번|세|살|원|층|시|분|초|kg|g|m|cm|km)/g, '$1$2')
+                
+                // 6. 마침표/쉼표 앞 공백 제거
+                .replace(/\s+([.,!?])/g, '$1')
+                
+                // 7. 중복 공백 및 불필요한 공백 정리
+                .replace(/\n+/g, '\n')
+                .replace(/[ ]+/g, ' ')
                 .trim();
 
-            resultArea.value = fixed;
-            statusText.innerText = "교정 끗! 🐥✨";
+            resultArea.value = improved;
+            statusText.innerText = "✨교정 완료✨";
         }
 
         function download(type) {
-            const content = resultArea.value;
-            if(!content) return alert("내용이 없습니다!");
-            const blob = type === 'txt' 
-                ? new Blob([content], {type:"text/plain;charset=utf-8"}) 
-                : new Blob(['\ufeff' + content], {type:'application/msword'});
+            const blob = type === 'txt' ? new Blob([resultArea.value], {type:"text/plain;charset=utf-8"}) : new Blob(['\ufeff'+resultArea.value], {type:'application/msword'});
             saveAs(blob, `뚱땅결과_${Date.now()}.${type}`);
         }
     </script>
